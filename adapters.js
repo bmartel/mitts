@@ -8,7 +8,7 @@ export const express = (req, res) => ({
   redirect: () =>
     res.writeHead(302, {
       Location: req.url
-    }).end()
+    }).end(),
 
   url: req.url,
 

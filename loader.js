@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 
 import m from 'mithril'
-import render 'mithril-node-render'
+import render from 'mithril-node-render'
 
 const noop = () => {};
 
@@ -23,7 +23,7 @@ const routeResolver = (app, component) => ({
         if (c.view) {
           return (match = m(app, { isServer: true }, m(c)));
         }
-      }));
+      });
     }
 
     return Promise.resolve(component).then(c => {
@@ -32,10 +32,10 @@ const routeResolver = (app, component) => ({
   },
 })
 
-export default class Loader {
+class Loader {
   constructor(adapter, options = {}) {
     this.adapter = adapter;
-    this.app = options.app;
+    this.app = options.app || 'div';
     this.html = options.html;
     this.manifest = options.manifest;
     this.createStore = options.createStore;
@@ -43,7 +43,7 @@ export default class Loader {
   }
 
   router(routes, defaultRoute, dom) {
-    m.route(dom, defaultRoute, wrapRoutes(routes));
+    m.route(dom, defaultRoute, wrapRoutes(this.app, routes));
   }
 
   matchedRoute() {
@@ -88,7 +88,7 @@ export default class Loader {
   store(url) {
     // Create a store from the current url
     if (this.createStore) {
-      return this.createStore(url)
+      return this.createStore({}, url)
     }
     return null;
   }
@@ -155,3 +155,5 @@ export default class Loader {
     }
   }
 }
+
+module.exports = Loader
