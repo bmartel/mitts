@@ -25,7 +25,6 @@ export default (loader, handler, routes, options = defaultOptions) => {
       const query = url.parse(req.url, { parseQueryString: true }).query;
       const attrs = Object.assign({}, params, { query });
 
-      console.log(query.things);
       Promise.resolve()
         .then(() => m(onmatch(attrs, req.url) || "div", attrs))
         .then(render)
