@@ -1,16 +1,23 @@
-export const express = (req, res) => ({
-  resolve: html =>
-    res.send(html),
+export const express = (request, response, next) => {
+  return {
+    next,
+    request,
+    response,
+    resolve: html => response.send(html),
 
-  reject: () =>
-    res.status(404).end(),
+    reject: () => response.status(404).end(),
 
-  redirect: () =>
-    res.writeHead(302, {
-      Location: req.url
-    }).end(),
+    redirect: url =>
+      response
+        .writeHead(302, {
+          Location: url
+        })
+        .end(),
 
-  url: req.url,
-
-  cookies: req.cookies,
-})
+    url: request.url,
+    path: request.path,
+    method: request.method,
+    params: request.params || {},
+    cookies: request.cookies
+  };
+};

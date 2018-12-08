@@ -6,6 +6,7 @@
   "author": "brandon <brandonmartel@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "find-my-way": "^1.15.4",
     "mithril": "^1.1.6",
     "mithril-node-render": "^2.3.0"
   }

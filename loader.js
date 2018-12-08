@@ -1,159 +1,128 @@
-import path from 'path'
-import fs from 'fs'
+import path from "path";
+import fs from "fs";
 
-import m from 'mithril'
-import render from 'mithril-node-render'
+import m from "mithril";
+import render from "mithril-node-render";
+import router from "./router";
 
 const noop = () => {};
-
-let match = null;
-
-const wrapRoutes = (app, routes) => {
-  const r = {};
-  Object.keys(routes).map(key => {
-    r[key] = routeResolver(app, routes[key]);
-  })
-  return r;
-}
-
-const routeResolver = (app, component) => ({
-  onmatch(params, url) {
-    if (component.onmatch) {
-      return Promise.resolve(component.onmatch(params, url)).then(c => {
-        if (c.view) {
-          return (match = m(app, { isServer: true }, m(c)));
-        }
-      });
-    }
-
-    return Promise.resolve(component).then(c => {
-      return (match = m(app, { isServer: true }, m(c)));
-    });
-  },
-})
 
 class Loader {
   constructor(adapter, options = {}) {
     this.adapter = adapter;
-    this.app = options.app || 'div';
+    this.app = options.app || "div";
     this.html = options.html;
     this.manifest = options.manifest;
     this.createStore = options.createStore;
     this.createSession = options.createSession;
+    this.routes = options.routes || {};
+    this.route(this.routes);
   }
 
-  router(routes, defaultRoute, dom) {
-    m.route(dom, defaultRoute, wrapRoutes(this.app, routes));
-  }
-
-  matchedRoute() {
-    return Promise.resolve(match);
-  }
-
-  inject(data, { html, title, meta, body, scripts, state } = {}) {
-    return data.replace('<html>', `<html ${html}>`)
+  _inject(data, { html, title, meta, body, scripts, state } = {}) {
+    return data
+      .replace("<html>", `<html ${html}>`)
       .replace(/<title>.*?<\/title>/g, title)
-      .replace('</head>', `${meta}</head>`)
+      .replace("</head>", `${meta}</head>`)
       .replace(
         '<div id="root"></div>',
         `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state}</script>`
-      )
+      );
   }
 
-  extract() {
+  _extract() {
     // TODO: get the webpack chunks resolved
-    const chunks = []
+    const chunks = [];
 
-    if(!this.manifest || !chunks || chunks.length < 1) {
-      return '';
+    if (!this.manifest || !chunks || chunks.length < 1) {
+      return "";
     }
 
     return Object.keys(this.manifest)
-      .filter(asset => chunks.indexOf(asset.replace('.js', '')) > -1)
+      .filter(asset => chunks.indexOf(asset.replace(".js", "")) > -1)
       .map(k => assets[k])
-      .map(c => `<script type="text/javascript" src="/${c}"></script>`)
+      .map(c => `<script type="text/javascript" src="/${c}"></script>`);
   }
 
-  render(component) {
-    return render(component)
-  }
-
-  session(cookies) {
+  _session(cookies) {
     if (this.createSession) {
       return this.createSession(cookies);
     }
     return null;
   }
 
-  store(url) {
+  _store(url) {
     // Create a store from the current url
     if (this.createStore) {
-      return this.createStore({}, url)
+      return this.createStore({}, url);
     }
     return null;
+  }
+
+  _process(component) {
+    return (loader, req, res, params) => {
+      if (!loader.html) {
+        throw new Error(
+          "missing html path to base template file from build output"
+        );
+      }
+
+      fs.readFile(loader.html, "utf8", (err, template) => {
+        // If there's an error... serve up something nasty
+        if (err) {
+          console.error("Read error", err);
+          res.writeHead(404, { "Content-Type": "text/plain" });
+          return res.end("error");
+        }
+
+        if (component.redirect) {
+          res.writeHead(302, {
+            Location: component.redirect
+          });
+          return res.end();
+        }
+
+        const store = loader._store();
+        // const session = loader_.session(ctx.cookies);
+
+        return render(component).then(body => {
+          const { html, title, meta } = loader.attributes();
+
+          const content = loader._inject(template, {
+            html,
+            title,
+            meta,
+            body,
+            scripts: loader._extract(),
+            state: store ? JSON.stringify(store).replace(/</g, "\\u003c") : null
+          });
+          res.writeHead(200, { "Content-Type": "text/html" });
+          return res.end(content);
+        });
+      });
+    };
+  }
+
+  route(routes = this.routes) {
+    this.router = router(this, this._process, routes);
   }
 
   attributes() {
     // TODO: Create a module to handle dynamic head content in mithril
     return {
-      html: '',
-      title: '',
-      meta: '',
-    }
-  }
-
-  process(resolve, reject, redirect, url, cookies) {
-    if (!this.html) {
-      throw new Error('missing html path to base template file from build output');
-    }
-
-    fs.readFile(
-      this.html,
-      'utf8',
-      (err, template) => {
-        // If there's an error... serve up something nasty
-        if (err) {
-          console.error('Read error', err)
-          return reject();
-        }
-
-        this.matchedRoute().then(component => {
-          if (!component) {
-            return reject();
-          }
-
-          if (component.redirect) {
-            return redirect();
-          }
-
-          const store = this.store(url);
-          const session = this.session(cookies);
-
-          this.render(component).then(body => {
-            const { html, title, meta } = this.attributes();
-
-            const content = this.inject(template, {
-              html,
-              title,
-              meta,
-              body,
-              scripts: this.extract(),
-              state: store ? JSON.stringify(store()).replace(/</g, '\\u003c'): null
-            })
-
-            resolve(content);
-          })
-        });
-      }
-    )
+      html: "",
+      title: "",
+      meta: ""
+    };
   }
 
   middleware() {
     return (...params) => {
-      const { resolve, reject, redirect, url, cookies } = this.adapter(...params);
-      return this.process(resolve, reject, redirect, url, cookies);
-    }
+      const ctx = this.adapter(...params);
+
+      this.router.lookup(ctx.request, ctx.response);
+    };
   }
 }
 
-module.exports = Loader
+module.exports = Loader;
