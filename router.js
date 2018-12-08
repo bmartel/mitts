@@ -2,13 +2,13 @@ import m from "mithril";
 import Router from "find-my-way";
 import url from "url";
 
-const defaultRoute = (req, res) => {
+const errorRoute = (req, res) => {
   res.statusCode = 404;
   res.end();
 };
 
 const defaultOptions = {
-  defaultRoute
+  errorRoute
 };
 
 let router = Router(defaultOptions);
@@ -32,7 +32,7 @@ export default (loader, handler, routes, options = defaultOptions) => {
         .then(html => html(loader, req, res, attrs))
         .catch(err => {
           console.error(err);
-          options.defaultRoute(req, res);
+          options.errorRoute(req, res);
         });
     });
   });
