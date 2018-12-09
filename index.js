@@ -300,5 +300,6 @@ Loadable.preloadReady = () => {
 
 module.exports = {
   Loadable,
+  Loader,
   express: options => new Loader(expressAdapter, options)
 };
