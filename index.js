@@ -88,7 +88,7 @@ function loadMap(obj) {
 }
 
 function Capture(component, fn) {
-  component.prototype.report = fn;
+  component.report = fn;
   return component;
 }
 
@@ -141,7 +141,7 @@ function createLoadableComponent(loadFn, options) {
     constructor() {
       init();
 
-      this.state = {
+      this.loadable = {
         error: res.error,
         pastDelay: false,
         timedOut: false,
@@ -162,7 +162,7 @@ function createLoadableComponent(loadFn, options) {
     }
 
     setState(state = {}) {
-      this.state = state;
+      this.loadable = state;
       m.redraw();
     }
 
@@ -233,18 +233,16 @@ function createLoadableComponent(loadFn, options) {
     }
 
     view(vnode) {
-      const { state, ...props } = vnode.attrs;
-
-      if (state.loading || state.error) {
+      if (this.loadable.loading || this.loadable.error) {
         return m(opts.loading, {
-          isLoading: state.loading,
-          pastDelay: state.pastDelay,
-          timedOut: state.timedOut,
-          error: state.error,
+          isLoading: this.loadable.loading,
+          pastDelay: this.loadable.pastDelay,
+          timedOut: this.loadable.timedOut,
+          error: this.loadable.error,
           retry: this.retry
         });
-      } else if (state.loaded) {
-        return opts.render(state.loaded, props);
+      } else if (this.loadable.loaded) {
+        return opts.render(this.loadable.loaded, vnode.attrs || {});
       } else {
         return null;
       }

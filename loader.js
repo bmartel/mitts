@@ -3,6 +3,7 @@ import fs from "fs";
 
 import m from "mithril";
 import render from "mithril-node-render";
+import Loadable from "./index";
 import router from "./router";
 import { express as expressAdapter } from "./adapters";
 
@@ -11,7 +12,6 @@ const noop = () => {};
 export default class Loader {
   constructor(adapter, options = {}) {
     this.adapter = adapter;
-    this.app = options.app || "div";
     this.html = options.html;
     this.manifest = options.manifest;
     this.createStore = options.createStore;
@@ -28,15 +28,13 @@ export default class Loader {
       .replace(
         '<div id="root"></div>',
         `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state}</script>`
-      );
+      )
+      .replace("</body>", scripts.join("") + "</body>");
   }
 
-  _extract() {
-    // TODO: get the webpack chunks resolved
-    const chunks = [];
-
+  _extract(chunks = []) {
     if (!this.manifest || !chunks || chunks.length < 1) {
-      return "";
+      return [];
     }
 
     return Object.keys(this.manifest)
@@ -55,12 +53,16 @@ export default class Loader {
   _store(url) {
     // Create a store from the current url
     if (this.createStore) {
-      return this.createStore({}, url);
+      return this.createStore({ title: "test" }, url);
     }
     return null;
   }
 
   _process(component) {
+    const modules = [];
+    const loaded = Loadable.Capture(component, moduleName =>
+      modules.push(moduleName)
+    );
     return (loader, req, res, params) => {
       if (!loader.html) {
         throw new Error(
@@ -68,7 +70,7 @@ export default class Loader {
         );
       }
 
-      fs.readFile(loader.html, "utf8", (err, template) => {
+      return fs.readFile(loader.html, "utf8", (err, template) => {
         // If there's an error... serve up something nasty
         if (err) {
           console.error("Read error", err);
@@ -86,7 +88,7 @@ export default class Loader {
         const store = loader._store(req.url);
         // const session = loader_.session(ctx.cookies);
 
-        return render(component).then(body => {
+        return render(loaded).then(body => {
           const { html, title, meta } = loader.attributes();
 
           const content = loader._inject(template, {
@@ -94,7 +96,7 @@ export default class Loader {
             title,
             meta,
             body,
-            scripts: loader._extract(),
+            scripts: loader._extract(modules),
             state: store ? JSON.stringify(store).replace(/</g, "\\u003c") : null
           });
           res.writeHead(200, { "Content-Type": "text/html" });

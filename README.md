@@ -67,21 +67,18 @@ An example express middleware is provided by default
   // server.js
   import express from "express";
   import { express as MixxExpress } from "mixx/loader";
-
-  // [Optional] application layout component
-  import appLayout from "../src/app";
-
-  // retrieve your clientside mithril routes definition
-  import routes from "../src/routes";
+  
+  // retrieve your clientside mithril entrypoint
+  import Entrypoint from "../src/index";
 
   // set the target output dir of your static build
   const buildDir = path.resolve(__dirname, "../build");
 
   // path to the entrypoint html template
-  const html = `${buildDir}/index.html`;
+  const html = `${buildDir}/app.html`;
 
   // path to the webpack manifest file
-  const manifest = `${buildDir}/asset-manifest.json`;
+  const manifest = `${buildDir}/mixx.json`;
 
   // [Optional] handle sessions however you need for users
   const createSession = cookies => {};
@@ -93,17 +90,16 @@ An example express middleware is provided by default
 
   // create a loader for express
   const mixx = MixxExpress({
-    app: appLayout,
     html,
     manifest,
     createSession,
     createStore,
-    routes
+    routes: Entrypoint.routes,
   });
 
   // register the middleware
-  app.use(express.Router().get("/", mixx.middleware()));
   app.use(express.static(buildDir));
+  app.use(mixx.middleware());
 ```
 
 But handling for your own server type can be added easily by implementing an adapter and creating a new Loader object providing your server adapter.
@@ -153,30 +149,11 @@ This adapatation aims to provide a nice experience for loading mithril component
   }
 
   const LoadableWidget =  Mixx({
-    loader: () => import('./components/widget')
+    loader: () => import('@/components/widget'),
     loading: Loading,
     delay: 300, // 0.3 seconds
   })
 
-```
+  m.route({ "/": { view: () => m(LoadableWidget) } }, "/", document.getElementById("root"))
 
-### Loadable.Capture
-
-To ensure server side render works with Mithril and `Loadable`'s there is a component enhancer `Loadable.Capture`. On your server render implementation wrap the application instance to be rendered and observe all the modules to be loaded.
-
-```js
-  import Mixx from "mixx";
-  import { getBundles } from "mixx/webpack"
-  import render from "mithril-node-render";
-  import stats from "./build/react-loadable.json";
-
-  app.get('/', (req, res) => {
-    let modules = [];
-    
-    let html = render(Mixx.Capture(m(App), (moduleName) => modules.push(moduleName)));
-
-    let bundles = getBundles(stats, modules);
-
-    // ...
-  });
 ```

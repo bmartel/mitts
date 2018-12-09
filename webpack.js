@@ -59,9 +59,3 @@ class LoadablePlugin {
 }
 
 exports.LoadablePlugin = LoadablePlugin;
-
-exports.getBundles = (manifest, moduleIds) =>
-  moduleIds.reduce(
-    (bundles, moduleId) => bundles.concat(manifest[moduleId]),
-    []
-  );
