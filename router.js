@@ -1,6 +1,7 @@
 import m from "mithril";
 import Router from "find-my-way";
 import url from "url";
+import { resolve } from "./util";
 
 const errorRoute = (req, res) => {
   res.statusCode = 404;
@@ -26,16 +27,8 @@ export default (loader, handler, routes, options = defaultOptions) => {
       const attrs = Object.assign({}, params, { query });
 
       Promise.resolve(onmatch(attrs, req.url))
-        .then(resolved => {
-          if (resolved) {
-            if (resolved.default) {
-              return m(resolved.default, attrs);
-            }
-            return m(resolved, attrs);
-          }
-
-          return m("div", attrs);
-        })
+        .then(resolve)
+        .then(resolved => m(resolved || "div", attrs))
         .then(render)
         .then(handler)
         .then(html => html(loader, req, res, attrs))

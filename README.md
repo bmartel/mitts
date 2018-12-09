@@ -64,7 +64,7 @@ Builds atop the [mithril-node-render](https://github.com/MithrilJS/mithril-node-
 An example express middleware is provided by default
 
 ```js
-  // server.js
+  // server/index.js
   import express from "express";
   import { express as MixxExpress } from "mixx/loader";
   
@@ -105,7 +105,7 @@ An example express middleware is provided by default
 But handling for your own server type can be added easily by implementing an adapter and creating a new Loader object providing your server adapter.
 
 ```js
-// server.js
+// server/index.js
   import http from "http";
   import Loader from "mixx/loader";
 
