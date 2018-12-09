@@ -173,8 +173,6 @@ To ensure server side render works with Mithril and `Loadable`'s there is a comp
   app.get('/', (req, res) => {
     let modules = [];
     
-    const capturable = 
-
     let html = render(Mixx.Loadable.Capture(m(App), (moduleName) => modules.push(moduleName)));
     
     let bundles = getBundles(stats, modules);
