@@ -83,7 +83,7 @@ export default class Loader {
           return res.end();
         }
 
-        const store = loader._store();
+        const store = loader._store(req.url);
         // const session = loader_.session(ctx.cookies);
 
         return render(component).then(body => {
