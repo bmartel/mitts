@@ -4,10 +4,11 @@ import fs from "fs";
 import m from "mithril";
 import render from "mithril-node-render";
 import router from "./router";
+import { express as expressAdapter } from "./adapters";
 
 const noop = () => {};
 
-class Loader {
+export default class Loader {
   constructor(adapter, options = {}) {
     this.adapter = adapter;
     this.app = options.app || "div";
@@ -125,4 +126,4 @@ class Loader {
   }
 }
 
-module.exports = Loader;
+export const express = options => new Loader(expressAdapter, options);

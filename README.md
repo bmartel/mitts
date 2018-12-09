@@ -66,7 +66,7 @@ An example express middleware is provided by default
 ```js
   // server.js
   import express from "express";
-  import Mixx from "mixx";
+  import { express as MixxExpress } from "mixx/loader";
 
   // [Optional] application layout component
   import appLayout from "../src/app";
@@ -92,7 +92,7 @@ An example express middleware is provided by default
   const app = express();
 
   // create a loader for express
-  const mixx = Mixx.express({
+  const mixx = MixxExpress({
     app: appLayout,
     html,
     manifest,
@@ -111,7 +111,7 @@ But handling for your own server type can be added easily by implementing an ada
 ```js
 // server.js
   import http from "http";
-  import Mixx from "mixx";
+  import Loader from "mixx/loader";
 
   const adapter = (req, res) => ({
     request: req,
@@ -119,7 +119,7 @@ But handling for your own server type can be added easily by implementing an ada
   });
 
   const mixx = new Loader(adapter, {
-    // same options as above Mixx.express
+    // same options as above MixxExpress
   });
 
   const server = http.createServer(mixx.middleware())
@@ -152,7 +152,7 @@ This adapatation aims to provide a nice experience for loading mithril component
     }
   }
 
-  const LoadableWidget =  Mixx.Loadable({
+  const LoadableWidget =  Mixx({
     loader: () => import('./components/widget')
     loading: Loading,
     delay: 300, // 0.3 seconds
@@ -166,15 +166,15 @@ To ensure server side render works with Mithril and `Loadable`'s there is a comp
 
 ```js
   import Mixx from "mixx";
-  import render from "mithril-node-render";
   import { getBundles } from "mixx/webpack"
+  import render from "mithril-node-render";
   import stats from "./build/react-loadable.json";
 
   app.get('/', (req, res) => {
     let modules = [];
     
-    let html = render(Mixx.Loadable.Capture(m(App), (moduleName) => modules.push(moduleName)));
-    
+    let html = render(Mixx.Capture(m(App), (moduleName) => modules.push(moduleName)));
+
     let bundles = getBundles(stats, modules);
 
     // ...

@@ -1,6 +1,4 @@
 import m from "mithril";
-import { express as expressAdapter } from "./adapters";
-import Loader from "./loader";
 
 const ALL_INITIALIZERS = [];
 const READY_INITIALIZERS = [];
@@ -298,8 +296,4 @@ Loadable.preloadReady = () => {
   });
 };
 
-module.exports = {
-  Loadable,
-  Loader,
-  express: options => new Loader(expressAdapter, options)
-};
+export default Loadable;
