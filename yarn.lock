@@ -21,10 +21,10 @@ find-my-way@^1.15.4:
     safe-regex "^1.1.0"
     semver-store "^0.3.0"
 
-mithril-node-render@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/mithril-node-render/-/mithril-node-render-2.3.0.tgz#7b12e6d410f33a7ac04926ebcfbe043eb402372b"
-  integrity sha512-cAN1VDiBY1wBcDzJiKn6QO+xcSWYyKsMxG10SmTUsV+iXPdp+Ibxgd2c4c6N4WeboGMonG3BGwtwUW4Xm62vuw==
+mithril-node-render@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/mithril-node-render/-/mithril-node-render-2.3.1.tgz#b3f6042f5170eddebdfddcc69221a527f34a263b"
+  integrity sha512-WKM/s1+Xc45eYirvNlRYDJ1ZyY9FtzNTvcq18p0qlJ7c5Z2noCLgOb3aNhK0dtUAB+4+2xRCP5kkPLAnNDsXnQ==
   dependencies:
     co "4.6.0"
 

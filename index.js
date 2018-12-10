@@ -1,9 +1,24 @@
-import m from "mithril";
 import stream from "mithril/stream";
 import { resolveModule } from "./util";
 
 const ALL_INITIALIZERS = [];
 const READY_INITIALIZERS = [];
+
+let m = null;
+
+function Init(mithril) {
+  if (!m) {
+    m = mithril; // bind to the same mithril module so redraws are acting on the same loop
+  }
+}
+
+function EnsureInit() {
+  if (!m) {
+    throw new Error(
+      "Mixx not initialized with mithril 'm'. Ensure Mixx.Init(m) is placed at the top of your entrpoint file."
+    );
+  }
+}
 
 function isWebpackReady(getModuleIds) {
   if (typeof __webpack_modules__ !== "object") {
@@ -94,10 +109,6 @@ function Capture(component, fn) {
   return component;
 }
 
-function render(loaded, props) {
-  return m(resolveModule(loaded), props);
-}
-
 function createLoadableComponent(loadFn, options) {
   let viewRenderCount = 0;
 
@@ -105,7 +116,11 @@ function createLoadableComponent(loadFn, options) {
     throw new Error("mixx-loadable requires a `loading` component");
   }
 
-  let opts = Object.assign(
+  function render(loaded, props) {
+    return options.m(resolveModule(loaded), props);
+  }
+
+  const opts = Object.assign(
     {
       loader: null,
       loading: null,
@@ -147,24 +162,32 @@ function createLoadableComponent(loadFn, options) {
 
       this._delay = null;
       this._timeout = null;
-      this.loadable = {
+      this.loadable = stream({
         error: res.error,
         pastDelay: false,
         timedOut: false,
         loading: res.loading,
         loaded: res.loaded
-      };
+      });
 
+      // using an observable, redraw the main application anytime the loadable state has changed
+      this.loadable.map(loadState => {
+        setTimeout(opts.m.redraw);
+      });
+
+      // clear any timeouts that have been set for a given Loadable component
       this._clearTimeouts = () => {
         clearTimeout(this._delay);
         clearTimeout(this._timeout);
       };
 
+      // helper function, mithril doesnt have a setState func for components so this is just convenience wrapper on the stream
       this._setState = (state = {}) => {
-        this.loadable = Object.assign({}, this.loadable, state);
+        this.loadable(Object.assign({}, this.loadable(), state));
       };
 
-      this._update = () => {
+      // update the component loadable state
+      this._resolve = () => {
         if (!this._mounted) {
           return;
         }
@@ -176,10 +199,10 @@ function createLoadableComponent(loadFn, options) {
         });
 
         this._clearTimeouts();
-        setTimeout(m.redraw);
       };
 
-      this._loadModule = () => {
+      // attempt to start loading an async component
+      this._load = () => {
         if (this.report && Array.isArray(opts.modules)) {
           opts.modules.forEach(moduleName => {
             this.report(moduleName);
@@ -207,19 +230,21 @@ function createLoadableComponent(loadFn, options) {
         }
 
         return res.promise
-          .then(() => this._update())
-          .catch(err => this._update());
+          .then(() => this._resolve())
+          .catch(err => this._resolve());
       };
 
+      // retry the load of a previously incomplete attempt
       this._retry = () => {
         this._setState({ error: null, loading: true, timedOut: false });
         res = loadFn(opts.loader);
-        this._loadModule();
+        this._load();
       };
 
+      // component is mounted, start unpacking the loadable
       this._mounted = true;
 
-      this._loadModule();
+      this._load();
     },
 
     onbeforeremove() {
@@ -229,11 +254,9 @@ function createLoadableComponent(loadFn, options) {
     },
 
     view(vnode) {
-      console.log(++viewRenderCount);
-      const { loaded, loading, error, pastDelay, timedOut } = this.loadable;
+      const { loaded, loading, error, pastDelay, timedOut } = this.loadable();
       if (loading || error) {
-        console.log("showing placeholder component");
-        return m(opts.loading, {
+        return opts.m(opts.loading, {
           isLoading: loading,
           pastDelay: pastDelay,
           timedOut: timedOut,
@@ -241,10 +264,8 @@ function createLoadableComponent(loadFn, options) {
           retry: this._retry
         });
       } else if (loaded) {
-        console.log("showing actual component");
         return opts.render(loaded, vnode.attrs || {});
       } else {
-        console.log("showing nothing");
         return null;
       }
     }
@@ -252,6 +273,9 @@ function createLoadableComponent(loadFn, options) {
 }
 
 function Loadable(opts) {
+  if (typeof opts.m !== "function" || !opts.m) {
+    throw new Error("Loadable requires a mithril instance 'm' to be passed in");
+  }
   return createLoadableComponent(load, opts);
 }
 
@@ -284,14 +308,13 @@ Loadable.Capture = Capture;
 
 Loadable.preloadAll = () => {
   return new Promise((resolve, reject) => {
-    console.log(ALL_INITIALIZERS);
     flushInitializers(ALL_INITIALIZERS).then(resolve, reject);
   });
 };
 
 Loadable.preloadReady = () => {
   return new Promise((resolve, reject) => {
-    // We always will resolve, errors should be handled within loading UIs.
+    // Always will resolve, errors should be handled within loading UIs.
     flushInitializers(READY_INITIALIZERS).then(resolve, resolve);
   });
 };
