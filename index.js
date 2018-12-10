@@ -4,22 +4,6 @@ import { resolveModule } from "./util";
 const ALL_INITIALIZERS = [];
 const READY_INITIALIZERS = [];
 
-let m = null;
-
-function Init(mithril) {
-  if (!m) {
-    m = mithril; // bind to the same mithril module so redraws are acting on the same loop
-  }
-}
-
-function EnsureInit() {
-  if (!m) {
-    throw new Error(
-      "Mixx not initialized with mithril 'm'. Ensure Mixx.Init(m) is placed at the top of your entrpoint file."
-    );
-  }
-}
-
 function isWebpackReady(getModuleIds) {
   if (typeof __webpack_modules__ !== "object") {
     return false;
