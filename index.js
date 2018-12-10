@@ -1,4 +1,6 @@
 import m from "mithril";
+import stream from "mithril/stream";
+import { resolveModule } from "./util";
 
 const ALL_INITIALIZERS = [];
 const READY_INITIALIZERS = [];
@@ -92,15 +94,13 @@ function Capture(component, fn) {
   return component;
 }
 
-function resolve(obj) {
-  return obj && obj.__esModule ? obj.default : obj;
-}
-
 function render(loaded, props) {
-  return m(resolve(loaded), props);
+  return m(resolveModule(loaded), props);
 }
 
 function createLoadableComponent(loadFn, options) {
+  let viewRenderCount = 0;
+
   if (!options.loading) {
     throw new Error("mixx-loadable requires a `loading` component");
   }
@@ -137,10 +137,16 @@ function createLoadableComponent(loadFn, options) {
     });
   }
 
-  return class LoadableComponent {
-    constructor() {
+  return {
+    preload() {
+      return init();
+    },
+
+    oninit() {
       init();
 
+      this._delay = null;
+      this._timeout = null;
       this.loadable = {
         error: res.error,
         pastDelay: false,
@@ -149,101 +155,96 @@ function createLoadableComponent(loadFn, options) {
         loaded: res.loaded
       };
 
-      this.retry = this.retry.bind(this);
-    }
+      this._clearTimeouts = () => {
+        clearTimeout(this._delay);
+        clearTimeout(this._timeout);
+      };
 
-    static preload() {
-      return init();
-    }
+      this._setState = (state = {}) => {
+        this.loadable = Object.assign({}, this.loadable, state);
+      };
 
-    oninit() {
-      this._mounted = true;
-      this._loadModule();
-    }
-
-    setState(state = {}) {
-      this.loadable = state;
-      m.redraw();
-    }
-
-    _loadModule() {
-      if (this.report && Array.isArray(opts.modules)) {
-        opts.modules.forEach(moduleName => {
-          this.report(moduleName);
-        });
-      }
-
-      if (!res.loading) {
-        return;
-      }
-
-      if (typeof opts.delay === "number") {
-        if (opts.delay === 0) {
-          this.setState({ pastDelay: true });
-        } else {
-          this._delay = setTimeout(() => {
-            this.setState({ pastDelay: true });
-          }, opts.delay);
-        }
-      }
-
-      if (typeof opts.timeout === "number") {
-        this._timeout = setTimeout(() => {
-          this.setState({ timedOut: true });
-        }, opts.timeout);
-      }
-
-      let update = () => {
+      this._update = () => {
         if (!this._mounted) {
           return;
         }
 
-        this.setState({
+        this._setState({
           error: res.error,
           loaded: res.loaded,
           loading: res.loading
         });
 
         this._clearTimeouts();
+        setTimeout(m.redraw);
       };
 
-      res.promise
-        .then(() => {
-          update();
-        })
-        .catch(err => {
-          update();
-        });
-    }
+      this._loadModule = () => {
+        if (this.report && Array.isArray(opts.modules)) {
+          opts.modules.forEach(moduleName => {
+            this.report(moduleName);
+          });
+        }
+
+        if (!res.loading) {
+          return;
+        }
+
+        if (typeof opts.delay === "number") {
+          if (opts.delay === 0) {
+            this._setState({ pastDelay: true });
+          } else {
+            this._delay = setTimeout(() => {
+              this._setState({ pastDelay: true });
+            }, opts.delay);
+          }
+        }
+
+        if (typeof opts.timeout === "number") {
+          this._timeout = setTimeout(() => {
+            this._setState({ timedOut: true });
+          }, opts.timeout);
+        }
+
+        return res.promise
+          .then(() => this._update())
+          .catch(err => this._update());
+      };
+
+      this._retry = () => {
+        this._setState({ error: null, loading: true, timedOut: false });
+        res = loadFn(opts.loader);
+        this._loadModule();
+      };
+
+      this._mounted = true;
+
+      this._loadModule();
+    },
 
     onbeforeremove() {
+      this.loadable = null;
       this._mounted = false;
       this._clearTimeouts();
-    }
-
-    _clearTimeouts() {
-      clearTimeout(this._delay);
-      clearTimeout(this._timeout);
-    }
-
-    retry() {
-      this.setState({ error: null, loading: true, timedOut: false });
-      res = loadFn(opts.loader);
-      this._loadModule();
-    }
+    },
 
     view(vnode) {
-      if (this.loadable.loading || this.loadable.error) {
+      console.log(++viewRenderCount);
+      const { loaded, loading, error, pastDelay, timedOut } = this.loadable;
+      if (loading || error) {
+        console.log("showing placeholder component");
         return m(opts.loading, {
-          isLoading: this.loadable.loading,
-          pastDelay: this.loadable.pastDelay,
-          timedOut: this.loadable.timedOut,
-          error: this.loadable.error,
-          retry: this.retry
+          isLoading: loading,
+          pastDelay: pastDelay,
+          timedOut: timedOut,
+          error: error,
+          retry: this._retry
         });
-      } else if (this.loadable.loaded) {
-        return opts.render(this.loadable.loaded, vnode.attrs || {});
+      } else if (loaded) {
+        console.log("showing actual component");
+        return opts.render(loaded, vnode.attrs || {});
       } else {
+        console.log("showing nothing");
         return null;
       }
     }
@@ -283,6 +284,7 @@ Loadable.Capture = Capture;
 
 Loadable.preloadAll = () => {
   return new Promise((resolve, reject) => {
+    console.log(ALL_INITIALIZERS);
     flushInitializers(ALL_INITIALIZERS).then(resolve, reject);
   });
 };

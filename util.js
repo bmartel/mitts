@@ -1,8 +1,10 @@
-export const resolve = promised =>
-  Promise.resolve(promised).then(resolvable => {
-    if (resolvable && resolvable.default) {
-      return resolvable.default;
-    }
+export const resolveModule = resolvable => {
+  if (resolvable && (resolvable.__esModule || resolvable.default)) {
+    return resolvable.default;
+  }
 
-    return resolvable;
-  });
+  return resolvable;
+};
+
+export const resolve = promised =>
+  Promise.resolve(promised).then(resolveModule);
