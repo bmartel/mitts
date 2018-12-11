@@ -7,8 +7,6 @@ import Loadable from "./index";
 import router from "./router";
 import { express as expressAdapter } from "./adapters";
 
-const noop = () => {};
-
 export default class Loader {
   constructor(adapter, options = {}) {
     this.adapter = adapter;
@@ -27,7 +25,7 @@ export default class Loader {
       .replace("</head>", `${meta}</head>`)
       .replace(
         '<div id="root"></div>',
-        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state}</script>`
+        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state};window.__SERVER_RENDERED__ = true;</script>`
       )
       .replace("</body>", scripts.join("") + "</body>");
   }
