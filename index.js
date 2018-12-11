@@ -97,7 +97,7 @@ function createLoadableComponent(loadFn, options) {
   let viewRenderCount = 0;
 
   if (!options.loading) {
-    throw new Error("mixx-loadable requires a `loading` component");
+    throw new Error("mitts-loadable requires a `loading` component");
   }
 
   function render(loaded, props) {

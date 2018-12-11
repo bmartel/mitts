@@ -1,4 +1,4 @@
-# Mixx
+# Mitts
 
 Helpful tools to quickly add server side rendering and dynamically imported components into a Mithril application.
 
@@ -9,50 +9,50 @@ There are 2 plugins that are provided for ensuring a proper management of loaded
 ### Webpack
 
 ```js
-  // webpack.config.js
-  import { LoadablePlugin } from "mixx/webpack";
+// webpack.config.js
+import { LoadablePlugin } from "mitts/webpack";
 
-  export default {
-    plugins: [
-      new LoadablePlugin({
-        filename: './build/mixx.json',
-      }),
-    ],
-  }
+export default {
+  plugins: [
+    new LoadablePlugin({
+      filename: "./build/mitts.json"
+    })
+  ]
+};
 ```
 
 ### Babel
 
 ```js
-  // server.js
-  require("mithril/test-utils/browserMock")(global); // required to ensure mithril can be used on the server
+// server.js
+require("mithril/test-utils/browserMock")(global); // required to ensure mithril can be used on the server
 
-  import { LoadablePlugin } from "mixx/webpack";
+import { LoadablePlugin } from "mitts/webpack";
 
-  // adapt as required, the options provided assume your server to be a project root dir and your client src is a project root dir `src`
-  require("@babel/register")({
-    ignore: [/\/build\//],
-    presets: [["@babel/preset-env", { targets: { node: "current" } }]],
-    plugins: [
-      [
-        "babel-plugin-module-resolver",
-        {
-          root: ["../"],
-          alias: {
-            "@": "./src",
-          },
-        },
-      ],
-      "@babel/syntax-dynamic-import",
-      "babel-plugin-dynamic-import-node",
-      
-      // ...
-
-      "mixx/babel",
+// adapt as required, the options provided assume your server to be a project root dir and your client src is a project root dir `src`
+require("@babel/register")({
+  ignore: [/\/build\//],
+  presets: [["@babel/preset-env", { targets: { node: "current" } }]],
+  plugins: [
+    [
+      "babel-plugin-module-resolver",
+      {
+        root: ["../"],
+        alias: {
+          "@": "./src"
+        }
+      }
     ],
-  });
+    "@babel/syntax-dynamic-import",
+    "babel-plugin-dynamic-import-node",
 
-  // ... declare server below
+    // ...
+
+    "mitts/babel"
+  ]
+});
+
+// ... declare server below
 ```
 
 ## Server Side Rendering
@@ -64,62 +64,62 @@ Builds atop the [mithril-node-render](https://github.com/MithrilJS/mithril-node-
 An example express middleware is provided by default
 
 ```js
-  // server/index.js
-  import express from "express";
-  import { express as MixxLoader } from "mixx/loader";
-  
-  // retrieve your clientside mithril entrypoint
-  import client from "../src/index";
+// server/index.js
+import express from "express";
+import { express as MittsLoader } from "mitts/loader";
 
-  // set the target output dir of your static build
-  const buildDir = path.resolve(__dirname, "../build");
+// retrieve your clientside mithril entrypoint
+import client from "../src/index";
 
-  // path to the entrypoint html template
-  const html = `${buildDir}/app.html`;
+// set the target output dir of your static build
+const buildDir = path.resolve(__dirname, "../build");
 
-  // path to the module manifest provided by mixx plugin
-  const manifest = `${buildDir}/mixx.json`;
+// path to the entrypoint html template
+const html = `${buildDir}/app.html`;
 
-  // [Optional] handle sessions however you need for users
-  const createSession = cookies => {};
+// path to the module manifest provided by mitts plugin
+const manifest = `${buildDir}/mitts.json`;
 
-  // express server
-  const app = express();
+// [Optional] handle sessions however you need for users
+const createSession = cookies => {};
 
-  // create a loader for express
-  const mixx = MixxLoader({
-    html,
-    manifest,
-    createSession,
-    // [Optional] create an application store to hydrate components via redux
-    createStore: client.store,
-    routes: client.routes,
-  });
+// express server
+const app = express();
 
-  // register the middleware
-  app.use(express.static(buildDir));
-  app.use(mixx.middleware());
+// create a loader for express
+const mitts = MittsLoader({
+  html,
+  manifest,
+  createSession,
+  // [Optional] create an application store to hydrate components via redux
+  createStore: client.store,
+  routes: client.routes
+});
+
+// register the middleware
+app.use(express.static(buildDir));
+app.use(mitts.middleware());
 ```
 
 But handling for your own server type can be added easily by implementing an adapter and creating a new Loader object providing your server adapter.
 
 ```js
 // server/index.js
-  import http from "http";
-  import Loader from "mixx/loader";
+import http from "http";
+import Loader from "mitts/loader";
 
-  const adapter = (req, res) => ({
-    request: req,
-    response: res
-  });
+const adapter = (req, res) => ({
+  request: req,
+  response: res
+});
 
-  const mixx = new Loader(adapter, {
-    // same options as above MixxLoader
-  });
+const mitts = new Loader(adapter, {
+  // same options as above MittsLoader
+});
 
-  const server = http.createServer(mixx.middleware())
+const server = http.createServer(mitts.middleware());
 
-  // ...
+// ...
 ```
 
 ## Dynamic Component Loading
@@ -131,30 +131,33 @@ Implementation credit and big thanks to the wonderful React based library [react
 This adapatation aims to provide a nice experience for loading mithril components dynamically using `import()`. There is a provided `Loadable` interface which handles loading in a component with proper lifecycle management.
 
 ```js
-  import m from "mithril";
-  import Mixx from "mixx";
+import m from "mithril";
+import Mitts from "mitts";
 
-  const Loading = {
-    view(vnode) {
-      const { error, retry, pastDelay } = vnode.attrs;
-      if (props.error) {
-        return m('div', ['Error! ', m('button', { onclick: retry }, 'Retry')]);
-      } else if (pastDelay) {
-        return m('div', 'Loading...')
-      } else {
-        return null;
-      }
+const Loading = {
+  view(vnode) {
+    const { error, retry, pastDelay } = vnode.attrs;
+    if (props.error) {
+      return m("div", ["Error! ", m("button", { onclick: retry }, "Retry")]);
+    } else if (pastDelay) {
+      return m("div", "Loading...");
+    } else {
+      return null;
     }
   }
+};
 
-  const LoadableWidget =  Mixx({
-    loader: () => import('@/components/widget'),
-    loading: Loading,
-    delay: 300, // 0.3 seconds
-  })
+const LoadableWidget = Mitts({
+  loader: () => import("@/components/widget"),
+  loading: Loading,
+  delay: 300 // 0.3 seconds
+});
 
-  m.route({ "/": { view: () => m(LoadableWidget) } }, "/", document.getElementById("root"))
-
+m.route(
+  { "/": { view: () => m(LoadableWidget) } },
+  "/",
+  document.getElementById("root")
+);
 ```
 
 ## Examples

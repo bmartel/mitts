@@ -1,5 +1,5 @@
 {
-  "name": "mixx",
+  "name": "mitts",
   "version": "0.1.0",
   "description":
     "Toolkit for server side rendering Mithril applications and handling of dynamic imported modules",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bmartel/mixx.git"
+    "url": "git+https://github.com/bmartel/mitts.git"
   },
   "keywords": ["Mithril", "SSR", "Server Side Render", "Dynamic Import"],
   "dependencies": {
