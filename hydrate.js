@@ -1,27 +1,23 @@
-export let store = null;
-
-export let routes = null;
-
 export default (
   m,
   clientRoutes = null,
   clientStore = null,
   dom = "#root",
-  routesUrl = "/"
+  baseUrl = "/"
 ) => {
-  store = clientStore;
-  routes = clientRoutes;
   if (typeof document !== "undefined") {
-    if (store) {
-      store(global.__INITIAL_STATE__);
+    if (clientStore) {
+      clientStore(global.__INITIAL_STATE__);
     }
 
-    if (routes) {
+    if (clientRoutes) {
       m.route(
         document.querySelector(dom),
-        routesUrl, // eslint-disable-line
-        routes
+        baseUrl, // eslint-disable-line
+        clientRoutes
       );
     }
   }
+
+  return { store: clientStore, routes: clientRoutes };
 };

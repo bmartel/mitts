@@ -15,7 +15,7 @@ There are 2 plugins that are provided for ensuring a proper management of loaded
   export default {
     plugins: [
       new LoadablePlugin({
-        filename: './build/mixx-loadable.json',
+        filename: './build/mixx.json',
       }),
     ],
   }
@@ -66,10 +66,10 @@ An example express middleware is provided by default
 ```js
   // server/index.js
   import express from "express";
-  import { express as MixxExpress } from "mixx/loader";
+  import { express as MixxLoader } from "mixx/loader";
   
   // retrieve your clientside mithril entrypoint
-  import Entrypoint from "../src/index";
+  import client from "../src/index";
 
   // set the target output dir of your static build
   const buildDir = path.resolve(__dirname, "../build");
@@ -77,24 +77,23 @@ An example express middleware is provided by default
   // path to the entrypoint html template
   const html = `${buildDir}/app.html`;
 
-  // path to the webpack manifest file
+  // path to the module manifest provided by mixx plugin
   const manifest = `${buildDir}/mixx.json`;
 
   // [Optional] handle sessions however you need for users
   const createSession = cookies => {};
 
-  // [Optional] create an application store to hydrate components via redux
-  const createStore = url => {};
-
+  // express server
   const app = express();
 
   // create a loader for express
-  const mixx = MixxExpress({
+  const mixx = MixxLoader({
     html,
     manifest,
     createSession,
-    createStore,
-    routes: Entrypoint.routes,
+    // [Optional] create an application store to hydrate components via redux
+    createStore: client.store,
+    routes: client.routes,
   });
 
   // register the middleware
@@ -115,7 +114,7 @@ But handling for your own server type can be added easily by implementing an ada
   });
 
   const mixx = new Loader(adapter, {
-    // same options as above MixxExpress
+    // same options as above MixxLoader
   });
 
   const server = http.createServer(mixx.middleware())
@@ -157,3 +156,11 @@ This adapatation aims to provide a nice experience for loading mithril component
   m.route({ "/": { view: () => m(LoadableWidget) } }, "/", document.getElementById("root"))
 
 ```
+
+## Examples
+
+For a working sample you can reference the latest version of the mithril starter app I have been maintaining over here [mithril-redux-starter](https://github.com/bmartel/mithril-redux-starter-webpack)
+
+## WIP
+
+This is highly experimental and unfinished. Everything mostly works, but there are no tests or guarantees of any kind at this time. The documentation is also lacking. If there are bugs, suggestions or improvements please feel free to open an issue and send a pull request.
