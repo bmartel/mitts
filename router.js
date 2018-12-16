@@ -76,7 +76,8 @@ export default (loader, routes, options = defaultOptions) => {
       const onmatch = component.onmatch || (() => component);
       const render = component.render || (a => a);
       const query = url.parse(req.url, { parseQueryString: true }).query;
-      const attrs = Object.assign({}, params, { query });
+      const server = { req, res };
+      const attrs = Object.assign({}, params, { query, server });
       const store = loader._store(req.url);
       const session = loader._session(req, store);
 
