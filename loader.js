@@ -21,7 +21,7 @@ export default class Loader {
       .replace("</head>", `${meta}</head>`)
       .replace(
         '<div id="root"></div>',
-        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state};window.__SERVER_RENDERED__ = ${new Date().getUTCMilliseconds()};</script>`
+        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state};window.__SERVER_RENDERED__ = { location: window.location.href, date: new Date() };</script>`
       )
       .replace("</body>", scripts.join("") + "</body>");
   }
