@@ -1,6 +1,6 @@
 {
   "name": "mitts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Toolkit for server side rendering Mithril applications and handling of dynamic imported modules",
   "main": "index.js",
   "author": "brandon <brandonmartel@gmail.com>",
