@@ -88,11 +88,6 @@ function loadMap(obj) {
   return state;
 }
 
-function Capture(component, fn) {
-  component.report = fn;
-  return component;
-}
-
 function createLoadableComponent(loadFn, options) {
   let viewRenderCount = 0;
 
@@ -287,8 +282,6 @@ function flushInitializers(initializers) {
     }
   });
 }
-
-Loadable.Capture = Capture;
 
 Loadable.preloadAll = () => {
   return new Promise((resolve, reject) => {

@@ -1,8 +1,4 @@
-import path from "path";
-import fs from "fs";
-
 import m from "mithril";
-import render from "mithril-node-render";
 import Loadable from "./index";
 import router from "./router";
 import { express as expressAdapter } from "./adapters";
@@ -25,7 +21,7 @@ export default class Loader {
       .replace("</head>", `${meta}</head>`)
       .replace(
         '<div id="root"></div>',
-        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state};window.__SERVER_RENDERED__ = true;</script>`
+        `<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state};window.__SERVER_RENDERED__ = ${new Date().getUTCMilliseconds()};</script>`
       )
       .replace("</body>", scripts.join("") + "</body>");
   }
@@ -41,9 +37,9 @@ export default class Loader {
       .map(c => `<script type="text/javascript" src="/${c}"></script>`);
   }
 
-  _session(cookies) {
+  _session(request, store = null) {
     if (this.createSession) {
-      return this.createSession(cookies);
+      return this.createSession(request, store);
     }
     return null;
   }
@@ -56,56 +52,8 @@ export default class Loader {
     return null;
   }
 
-  _process(component) {
-    const modules = [];
-    const loaded = Loadable.Capture(component, moduleName =>
-      modules.push(moduleName)
-    );
-    return (loader, req, res, params) => {
-      if (!loader.html) {
-        throw new Error(
-          "missing html path to base template file from build output"
-        );
-      }
-
-      return fs.readFile(loader.html, "utf8", (err, template) => {
-        // If there's an error... serve up something nasty
-        if (err) {
-          console.error("Read error", err);
-          res.writeHead(404, { "Content-Type": "text/plain" });
-          return res.end("error");
-        }
-
-        if (component.redirect) {
-          res.writeHead(302, {
-            Location: component.redirect
-          });
-          return res.end();
-        }
-
-        const store = loader._store(req.url);
-        // const session = loader_.session(ctx.cookies);
-
-        return render(loaded).then(body => {
-          const { html, title, meta } = loader.attributes();
-
-          const content = loader._inject(template, {
-            html,
-            title,
-            meta,
-            body,
-            scripts: loader._extract(modules),
-            state: store ? JSON.stringify(store).replace(/</g, "\\u003c") : null
-          });
-          res.writeHead(200, { "Content-Type": "text/html" });
-          return res.end(content);
-        });
-      });
-    };
-  }
-
   route(routes = this.routes) {
-    this.router = router(this, this._process, routes);
+    this.router = router(this, routes);
   }
 
   attributes() {

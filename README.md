@@ -81,7 +81,7 @@ const html = `${buildDir}/app.html`;
 const manifest = `${buildDir}/mitts.json`;
 
 // [Optional] handle sessions however you need for users
-const createSession = cookies => {};
+const createSession = (req, store) => {};
 
 // express server
 const app = express();
