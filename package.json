@@ -1,8 +1,7 @@
 {
   "name": "mitts",
-  "version": "0.1.0",
-  "description":
-    "Toolkit for server side rendering Mithril applications and handling of dynamic imported modules",
+  "version": "0.1.1",
+  "description": "Toolkit for server side rendering Mithril applications and handling of dynamic imported modules",
   "main": "index.js",
   "author": "brandon <brandonmartel@gmail.com>",
   "license": "MIT",
@@ -10,7 +9,12 @@
     "type": "git",
     "url": "git+https://github.com/bmartel/mitts.git"
   },
-  "keywords": ["Mithril", "SSR", "Server Side Render", "Dynamic Import"],
+  "keywords": [
+    "Mithril",
+    "SSR",
+    "Server Side Render",
+    "Dynamic Import"
+  ],
   "dependencies": {
     "find-my-way": "^1.15.4",
     "mithril-node-render": "^2.3.1"
