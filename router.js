@@ -80,7 +80,7 @@ export default (loader, routes, options = defaultOptions) => {
       const store = loader._store(req.url);
       const session = loader._session(req, store);
 
-      Promise.resolve(onmatch(attrs, req.url, { req, res, params }))
+      Promise.resolve(onmatch(attrs, req.url))
         .then(resolve)
         .then(resolved => m(resolved || "div", attrs))
         .then(render)
