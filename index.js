@@ -1,4 +1,3 @@
-import stream from "mithril/stream";
 import { resolveModule } from "./util";
 
 const ALL_INITIALIZERS = [];
@@ -141,7 +140,7 @@ function createLoadableComponent(loadFn, options) {
 
       this._delay = null;
       this._timeout = null;
-      this.loadable = stream({
+      this.loadable = options.stream({
         error: res.error,
         pastDelay: false,
         timedOut: false,
@@ -252,8 +251,8 @@ function createLoadableComponent(loadFn, options) {
 }
 
 function Loadable(opts) {
-  if (typeof opts.m !== "function" || !opts.m) {
-    throw new Error("Loadable requires a mithril instance 'm' to be passed in");
+  if (!opts.m || !opts.stream || typeof opts.m !== "function" || typeof opts.stream !== "function") {
+    throw new Error("Loadable requires a mithril instance 'm' and mithril/stream to be passed in");
   }
   return createLoadableComponent(load, opts);
 }
