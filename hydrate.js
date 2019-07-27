@@ -5,6 +5,7 @@ export default (
   dom = "#root",
   baseUrl = "/"
 ) => {
+
   if (typeof document !== "undefined") {
     if (clientStore) {
       clientStore(global.__INITIAL_STATE__);
