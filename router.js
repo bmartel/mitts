@@ -58,7 +58,7 @@ export const handler = (component, store, session) => {
           state: store ? JSON.stringify(store).replace(/</g, "\\u003c") : null
         });
         res.writeHead(200, { "Content-Type": "text/html" });
-        return res.end(content);
+        res.end(content);
       });
     });
   };
