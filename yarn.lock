@@ -29,9 +29,9 @@ mithril-node-render@^2.3.1:
     co "4.6.0"
 
 mithril@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/mithril/-/mithril-2.0.1.tgz#3454fb7ed228403b91a02f5acc0f810d4bb403ca"
-  integrity sha512-LlfCnWwrnjBUL9cMJaffacB7mKgIl7QbMyJpO0+/vPKHrcq6yTKYR0DlSfDfBDYXi9+l+DZ5yYhgq/QFOtXkjg==
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/mithril/-/mithril-2.0.3.tgz#5c28c6e497d87cd2a87ab6c0c7d82cf24af2fb7b"
+  integrity sha512-iIbfChQswUJJf4Vc24NMBwfE2hV7SBwpyVoJ7raO9YhAjCCvLQ+G1Nvpz1jDMsPJQc46EHSplxiDGe0rAi/vqQ==
 
 ret@~0.1.10:
   version "0.1.15"
