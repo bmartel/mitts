@@ -16,7 +16,7 @@
     "Dynamic Import"
   ],
   "dependencies": {
-    "find-my-way": "^1.15.4",
+    "find-my-way": "^2.2.5",
     "mithril-node-render": "^2.3.1"
   },
   "devDependencies": {
